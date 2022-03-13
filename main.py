@@ -5,6 +5,8 @@ import pathlib
 import pygubu
 import tkinter as tk
 import tkinter.ttk as ttk
+import numpy as np
+import matplotlib.pyplot as plt
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
@@ -43,12 +45,18 @@ class BiometriaGuiApp:
         self.main_frame = tk.Frame(self.main_window)
         self.original_image_canvas = tk.Canvas(self.main_frame)
         self.original_image_canvas.configure(background='#0e5092', cursor='hand2', height='400', width='400')
-        self.original_image_canvas.pack(anchor='center', side='left')
+        self.original_image_canvas.place(anchor='nw', relx='0.1', rely='0.05', x='0', y='0')
         self.original_image_canvas.bind('<Button-1>', self.open_original_image)
         self.changed_image_1_canvas = tk.Canvas(self.main_frame)
         self.changed_image_1_canvas.configure(background='#970925', cursor='hand2', height='400', width='400')
-        self.changed_image_1_canvas.pack(anchor='center', side='right')
+        self.changed_image_1_canvas.place(anchor='ne', relx='0.9', rely='0.05', x='0', y='0')
         self.changed_image_1_canvas.bind('<Button-1>', self.open_binarized_image)
+        self.original_histogram_canvas = tk.Canvas(self.main_frame)
+        self.original_histogram_canvas.configure(background='#65dc80', width='400')
+        self.original_histogram_canvas.place(anchor='sw', relx='0.1', rely='0.95', x='0', y='0')
+        self.changed_histogram_1_canvas = tk.Canvas(self.main_frame)
+        self.changed_histogram_1_canvas.configure(background='#8986bb', width='400')
+        self.changed_histogram_1_canvas.place(anchor='se', relx='0.9', rely='0.95', x='0', y='0')
         self.main_frame.configure(background='#03256C', height='800', width='1166')
         self.main_frame.pack(side='top')
         self.main_frame.pack_propagate(0)
@@ -68,14 +76,9 @@ class BiometriaGuiApp:
         img = Image.open(filename)
         self.original_image = img
         img = self.change_image_size(img)
-        self.insert_original_image(img)
-
-    def insert_original_image(self, img):
-        # PhotoImage class is used to add image to widgets, icons etc
-        img = ImageTk.PhotoImage(img)
-        self.original_image_canvas.create_image(0, 0, image=img, anchor='nw')
-        self.original_image_canvas.image = img
-        self.original_image_canvas.configure(height=img.height(), width=img.width())
+        self.insert_image(img, self.original_image_canvas)
+        histogram = self.generate_histogram(img)
+        self.insert_histogram(histogram, self.original_histogram_canvas)
 
     def change_image_size(self, img, width=400, height=400):
         return img.resize((width, height), Image.ANTIALIAS)
@@ -93,13 +96,6 @@ class BiometriaGuiApp:
             tk.messagebox.showwarning(title, text)
         elif type_message == 'error':
             tk.messagebox.showerror(title, text)
-
-    def insert_image(self, img, canvas):
-        img = self.change_image_size(img)
-        img = ImageTk.PhotoImage(img)
-        canvas.create_image(0, 0, image=img, anchor='nw')
-        canvas.image = img
-        canvas.configure(height=img.height(), width=img.width())
 
     def binarize_image(self):
         threshold = self.binarize_threshold_scale.get()
@@ -125,7 +121,6 @@ class BiometriaGuiApp:
     def set_binarize_option(self, option):
         self.binarize_option = option
 
-
     def binarize_and_insert_image(self):
         if not self.original_image:
             self.message_popup('Original Image', 'You need to select an image first', 'info')
@@ -139,6 +134,21 @@ class BiometriaGuiApp:
         else:
             self.binarize_image().show()
 
+    def insert_image(self, img, canvas):
+        img = self.change_image_size(img)
+        img = ImageTk.PhotoImage(img)
+        canvas.create_image(0, 0, image=img, anchor='nw')
+        canvas.image = img
+        canvas.configure(height=img.height(), width=img.width())
+
+    def generate_histogram(self, image):
+        histogram = np.zeros(256)
+        for x in range(image.width):
+            for y in range(image.height):
+                pixel = image.getpixel((x, y))
+                pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
+                histogram[pixel] += 1
+        return histogram
 
 
 if __name__ == '__main__':
