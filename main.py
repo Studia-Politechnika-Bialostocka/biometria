@@ -59,6 +59,23 @@ class BiometriaGuiApp:
         self.grey_changed_image_1_canvas = tk.Canvas(self.main_frame)
         self.grey_changed_image_1_canvas.configure(background='#8986bb', height='350', width='350')
         self.grey_changed_image_1_canvas.place(anchor='se', relx='0.87', rely='0.97', x='0', y='0')
+        self.histogram_1 = tk.Button(self.main_frame)
+        self.histogram_1.configure(text='Histogram 1')
+        self.histogram_1.place(relx='0.035', rely='0.25', x='0', y='0')
+        self.histogram_1.configure(command=lambda: self.generate_and_display_histogram(self.original_image))
+
+        self.histogram_2 = tk.Button(self.main_frame)
+        self.histogram_2.configure(text='Histogram 2')
+        self.histogram_2.place(anchor='se', relx='0.965', rely='0.25', x='0', y='0')
+        self.histogram_2.configure(command=self.generate_and_display_histogram)
+        self.histogram_3 = tk.Button(self.main_frame)
+        self.histogram_3.configure(text='Histogram 3')
+        self.histogram_3.place(anchor='nw', relx='0.035', rely='0.75', x='0', y='0')
+        self.histogram_3.configure(command=self.generate_and_display_histogram)
+        self.histogram_4 = tk.Button(self.main_frame)
+        self.histogram_4.configure(text='Histogram 4')
+        self.histogram_4.place(anchor='se', relx='0.965', rely='0.75', x='0', y='0')
+        self.histogram_4.configure(command=self.generate_and_display_histogram)
         self.main_frame.configure(background='#03256C', height='800', width='1166')
         self.main_frame.pack(side='top')
         self.main_frame.pack_propagate(0)
@@ -146,13 +163,16 @@ class BiometriaGuiApp:
         canvas.image = img
         canvas.configure(height=img.height(), width=img.width())
 
-    def generate_histogram(self, image):
+    def generate_and_display_histogram(self, image):
         histogram = np.zeros(256)
         for x in range(image.width):
             for y in range(image.height):
                 pixel = image.getpixel((x, y))
                 pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
                 histogram[pixel] += 1
+        plt.figure()
+        plt.bar(range(256), histogram)
+        plt.show()
         return histogram
 
 
