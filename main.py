@@ -15,6 +15,8 @@ PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 class BiometriaGuiApp:
     def __init__(self, master=None):
         # build ui
+        self.grey_changed_image_1 = None
+        self.grey_original_image = None
         self.changed_image_1 = None
         self.original_image = None
         self.main_window = tk.Tk() if master is None else tk.Toplevel(master)
@@ -123,9 +125,24 @@ class BiometriaGuiApp:
         elif type_message == 'error':
             tk.messagebox.showerror(title, text)
 
-    def binarize_image(self):
+    def binarize_grey_image(self, image):
         threshold = self.binarize_threshold_scale.get()
-        image = self.original_image.copy()
+        binarize_option = self.binarize_option
+        for x in range(image.width):
+            for y in range(image.height):
+                pixel = image.getpixel((x, y))
+                if pixel < threshold:
+                    image.putpixel((x, y), 0)
+                else:
+                    image.putpixel((x, y), 255)
+        image.save('binarized_grey_image.png')
+        self.grey_changed_image_1 = image
+        return image
+
+    def binarize_image(self, image):
+        if image.mode == 'L':
+            return self.binarize_grey_image(image)
+        threshold = self.binarize_threshold_scale.get()
         binarize_option = self.binarize_option
         for x in range(image.width):
             for y in range(image.height):
@@ -153,11 +170,12 @@ class BiometriaGuiApp:
         if not self.original_image:
             self.message_popup('Original Image', 'You need to select an image first', 'info')
         else:
-            binarized_image = self.binarize_image()
+            original_image = self.original_image.copy()
+            binarized_image = self.binarize_image(original_image)
             self.insert_image(binarized_image, self.changed_image_1_canvas)
-            grey_image = self.gray_scale_image(binarized_image.copy())
-            self.grey_changed_image_1 = grey_image.copy()
-            self.insert_image(grey_image, self.grey_changed_image_1_canvas)
+            grey_image = self.gray_scale_image(original_image)
+            binarized_image = self.binarize_image(grey_image)
+            self.insert_image(binarized_image, self.grey_changed_image_1_canvas)
 
     def insert_image(self, img, canvas):
         img = self.change_image_size(img)
@@ -183,7 +201,6 @@ class BiometriaGuiApp:
         plt.xlabel('Pixel value')
         plt.ylabel('Number of pixels')
         plt.grid(True, which='major', axis='y')
-        # max value for plt
         plt.ylim(0, max(histogram) + 100)
 
         plt.show()
