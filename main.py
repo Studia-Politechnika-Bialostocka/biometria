@@ -53,12 +53,12 @@ class BiometriaGuiApp:
         self.changed_image_1_canvas.configure(background='#970925', cursor='hand2', height='350', width='350')
         self.changed_image_1_canvas.place(anchor='ne', relx='0.87', rely='0.03', x='0', y='0')
         self.changed_image_1_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.changed_image_1_canvas, self.changed_image_1))
-        self.original_histogram_canvas = tk.Canvas(self.main_frame)
-        self.original_histogram_canvas.configure(background='#65dc80', height='350', width='350')
-        self.original_histogram_canvas.place(anchor='sw', relx='0.13', rely='0.97', x='0', y='0')
-        self.changed_histogram_1_canvas = tk.Canvas(self.main_frame)
-        self.changed_histogram_1_canvas.configure(background='#8986bb', height='350', width='350')
-        self.changed_histogram_1_canvas.place(anchor='se', relx='0.87', rely='0.97', x='0', y='0')
+        self.grey_original_image_canvas = tk.Canvas(self.main_frame)
+        self.grey_original_image_canvas.configure(background='#65dc80', height='350', width='350')
+        self.grey_original_image_canvas.place(anchor='sw', relx='0.13', rely='0.97', x='0', y='0')
+        self.grey_changed_image_1_canvas = tk.Canvas(self.main_frame)
+        self.grey_changed_image_1_canvas.configure(background='#8986bb', height='350', width='350')
+        self.grey_changed_image_1_canvas.place(anchor='se', relx='0.87', rely='0.97', x='0', y='0')
         self.main_frame.configure(background='#03256C', height='800', width='1166')
         self.main_frame.pack(side='top')
         self.main_frame.pack_propagate(0)
@@ -73,11 +73,20 @@ class BiometriaGuiApp:
     def run(self):
         self.mainwindow.mainloop()
 
+    def gray_scale_image(self, image):
+        image = image.convert('L')
+        return image
+
     def select_and_insert_image(self):
         filename = filedialog.askopenfilename(title='Select an image')
+        if not filename:
+            self.message_popup('No image selected', 'No image selected', 'warning')
+            return
         img = Image.open(filename)
         self.original_image = img
         self.insert_image(img, self.original_image_canvas)
+        grey_image = self.gray_scale_image(img)
+        self.insert_image(grey_image, self.grey_original_image_canvas)
 
     def change_image_size(self, img, width=350, height=350):
         return img.resize((width, height), Image.ANTIALIAS)
@@ -127,6 +136,8 @@ class BiometriaGuiApp:
         else:
             binarized_image = self.binarize_image()
             self.insert_image(binarized_image, self.changed_image_1_canvas)
+            grey_image = self.gray_scale_image(binarized_image.copy())
+            self.insert_image(grey_image, self.grey_changed_image_1_canvas)
 
     def insert_image(self, img, canvas):
         img = self.change_image_size(img)
