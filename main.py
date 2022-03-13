@@ -15,6 +15,7 @@ PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 class BiometriaGuiApp:
     def __init__(self, master=None):
         # build ui
+        self.changed_image_1 = None
         self.original_image = None
         self.main_window = tk.Tk() if master is None else tk.Toplevel(master)
         self.menu_frame = tk.Frame(self.main_window)
@@ -46,11 +47,11 @@ class BiometriaGuiApp:
         self.original_image_canvas = tk.Canvas(self.main_frame)
         self.original_image_canvas.configure(background='#0e5092', cursor='hand2', height='400', width='400')
         self.original_image_canvas.place(anchor='nw', relx='0.1', rely='0.05', x='0', y='0')
-        self.original_image_canvas.bind('<Button-1>', self.open_original_image)
+        self.original_image_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.original_image_canvas, self.original_image))
         self.changed_image_1_canvas = tk.Canvas(self.main_frame)
         self.changed_image_1_canvas.configure(background='#970925', cursor='hand2', height='400', width='400')
         self.changed_image_1_canvas.place(anchor='ne', relx='0.9', rely='0.05', x='0', y='0')
-        self.changed_image_1_canvas.bind('<Button-1>', self.open_binarized_image)
+        self.changed_image_1_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.changed_image_1_canvas, self.changed_image_1))
         self.original_histogram_canvas = tk.Canvas(self.main_frame)
         self.original_histogram_canvas.configure(background='#65dc80', width='400')
         self.original_histogram_canvas.place(anchor='sw', relx='0.1', rely='0.95', x='0', y='0')
@@ -75,19 +76,16 @@ class BiometriaGuiApp:
         filename = filedialog.askopenfilename(title='Select an image')
         img = Image.open(filename)
         self.original_image = img
-        img = self.change_image_size(img)
         self.insert_image(img, self.original_image_canvas)
-        histogram = self.generate_histogram(img)
-        self.insert_histogram(histogram, self.original_histogram_canvas)
 
-    def change_image_size(self, img, width=400, height=400):
+    def change_image_size(self, img, width=350, height=350):
         return img.resize((width, height), Image.ANTIALIAS)
 
-    def open_original_image(self, event):
-        if not self.original_image:
-            self.message_popup('Original Image', 'You need to select an image first', 'info')
+    def open_image_in_new_window(self, event, img):
+        if not img:
+            self.message_popup('Image', 'You need to select an image first', 'info')
         else:
-            self.original_image.show()
+            img.show()
 
     def message_popup(self, title, text, type_message='info'):
         if type_message == 'info':
@@ -116,6 +114,7 @@ class BiometriaGuiApp:
                     image.putpixel((x, y), (0, 0, 0))
                 else:
                     image.putpixel((x, y), (255, 255, 255))
+        self.changed_image_1 = image
         return image
 
     def set_binarize_option(self, option):
@@ -127,12 +126,6 @@ class BiometriaGuiApp:
         else:
             binarized_image = self.binarize_image()
             self.insert_image(binarized_image, self.changed_image_1_canvas)
-
-    def open_binarized_image(self, event):
-        if not self.original_image:
-            self.message_popup('Original Image', 'You need to select an image first', 'info')
-        else:
-            self.binarize_image().show()
 
     def insert_image(self, img, canvas):
         img = self.change_image_size(img)
