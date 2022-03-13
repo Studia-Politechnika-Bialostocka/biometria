@@ -19,7 +19,7 @@
         </containerlayout>
         <child>
           <object class="tk.Button" id="select_image_button">
-            <property name="command" type="command" cbtype="simple">select_image</property>
+            <property name="command" type="command" cbtype="simple">select_and_insert_image</property>
             <property name="cursor">hand2</property>
             <property name="text" translatable="yes">Select Image</property>
             <layout manager="pack">
@@ -67,6 +67,7 @@
             </child>
             <child>
               <object class="tk.Button" id="binarize_image_button">
+                <property name="command" type="command" cbtype="simple">binarize_image</property>
                 <property name="text" translatable="yes">Binarize Image</property>
                 <layout manager="pack">
                   <property name="fill">x</property>
