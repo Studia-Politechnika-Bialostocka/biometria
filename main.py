@@ -50,7 +50,7 @@ class BiometriaGuiApp:
         self.original_image_canvas.place(anchor='nw', relx='0.13', rely='0.03', x='0', y='0')
         self.original_image_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.original_image_canvas, self.original_image))
         self.changed_image_1_canvas = tk.Canvas(self.main_frame)
-        self.changed_image_1_canvas.configure(background='#970925', cursor='hand2', height='350', width='350')
+        self.changed_image_1_canvas.configure(background='#F26419', cursor='hand2', height='350', width='350')
         self.changed_image_1_canvas.place(anchor='ne', relx='0.87', rely='0.03', x='0', y='0')
         self.changed_image_1_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.changed_image_1_canvas, self.changed_image_1))
         self.grey_original_image_canvas = tk.Canvas(self.main_frame)
@@ -63,19 +63,19 @@ class BiometriaGuiApp:
         self.histogram_1.configure(text='Histogram 1')
         self.histogram_1.place(relx='0.035', rely='0.25', x='0', y='0')
         self.histogram_1.configure(command=lambda: self.generate_and_display_histogram(self.original_image))
-
         self.histogram_2 = tk.Button(self.main_frame)
         self.histogram_2.configure(text='Histogram 2')
         self.histogram_2.place(anchor='se', relx='0.965', rely='0.25', x='0', y='0')
-        self.histogram_2.configure(command=self.generate_and_display_histogram)
+        self.histogram_2.configure(command=lambda: self.generate_and_display_histogram(self.changed_image_1, 'changed_image_1'))
         self.histogram_3 = tk.Button(self.main_frame)
         self.histogram_3.configure(text='Histogram 3')
         self.histogram_3.place(anchor='nw', relx='0.035', rely='0.75', x='0', y='0')
         self.histogram_3.configure(command=self.generate_and_display_histogram)
+        self.histogram_3.configure(command=lambda: self.generate_and_display_histogram(self.grey_original_image, 'grey_original_image'))
         self.histogram_4 = tk.Button(self.main_frame)
         self.histogram_4.configure(text='Histogram 4')
         self.histogram_4.place(anchor='se', relx='0.965', rely='0.75', x='0', y='0')
-        self.histogram_4.configure(command=self.generate_and_display_histogram)
+        self.histogram_4.configure(command=lambda: self.generate_and_display_histogram(self.grey_changed_image_1, 'grey_changed_image_1'))
         self.main_frame.configure(background='#03256C', height='800', width='1166')
         self.main_frame.pack(side='top')
         self.main_frame.pack_propagate(0)
@@ -103,6 +103,7 @@ class BiometriaGuiApp:
         self.original_image = img
         self.insert_image(img, self.original_image_canvas)
         grey_image = self.gray_scale_image(img)
+        self.grey_original_image = grey_image.copy()
         self.insert_image(grey_image, self.grey_original_image_canvas)
 
     def change_image_size(self, img, width=350, height=350):
@@ -130,13 +131,13 @@ class BiometriaGuiApp:
             for y in range(image.height):
                 pixel = image.getpixel((x, y))
                 if binarize_option == 'Normal':
-                    pixel = (pixel[0] + pixel[1] + pixel[2]) / 3
+                    pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
                 elif binarize_option == 'Red':
                     pixel = pixel[0]
                 elif binarize_option == 'Green':
                     pixel = pixel[1]
                 elif binarize_option == 'Blue':
-                    pixel = pixel[2]
+                        pixel = pixel[2]
                 if pixel < threshold:
                     image.putpixel((x, y), (0, 0, 0))
                 else:
@@ -154,6 +155,7 @@ class BiometriaGuiApp:
             binarized_image = self.binarize_image()
             self.insert_image(binarized_image, self.changed_image_1_canvas)
             grey_image = self.gray_scale_image(binarized_image.copy())
+            self.grey_changed_image_1 = grey_image.copy()
             self.insert_image(grey_image, self.grey_changed_image_1_canvas)
 
     def insert_image(self, img, canvas):
@@ -163,17 +165,27 @@ class BiometriaGuiApp:
         canvas.image = img
         canvas.configure(height=img.height(), width=img.width())
 
-    def generate_and_display_histogram(self, image):
+    def generate_and_display_histogram(self, image, type_histogram='original'):
+        if not image:
+            self.message_popup('Image', 'You need to select an image first', 'info')
+            return
         histogram = np.zeros(256)
         for x in range(image.width):
             for y in range(image.height):
                 pixel = image.getpixel((x, y))
-                pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
+                if type(pixel) == tuple:
+                    pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
                 histogram[pixel] += 1
         plt.figure()
         plt.bar(range(256), histogram)
+        plt.title('Histogram of ' + type_histogram + ' image')
+        plt.xlabel('Pixel value')
+        plt.ylabel('Number of pixels')
+        plt.grid(True, which='major', axis='y')
+        # max value for plt
+        plt.ylim(0, max(histogram) + 100)
+
         plt.show()
-        return histogram
 
 
 if __name__ == '__main__':
