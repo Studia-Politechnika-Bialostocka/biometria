@@ -143,6 +143,7 @@ class BiometriaGuiApp:
                 else:
                     image.putpixel((x, y), (255, 255, 255))
         self.changed_image_1 = image
+        image.save('binarized_image.png')
         return image
 
     def set_binarize_option(self, option):
