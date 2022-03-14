@@ -37,6 +37,7 @@
             <property name="width">200</property>
             <layout manager="pack">
               <property name="padx">10</property>
+              <property name="pady">10</property>
               <property name="side">top</property>
             </layout>
             <containerlayout manager="pack">
@@ -76,6 +77,32 @@
                 </layout>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Button" id="stretching_image_button">
+            <property name="command" type="command" cbtype="simple">stretch_image</property>
+            <property name="compound">top</property>
+            <property name="text" translatable="yes">Stretch Image</property>
+            <layout manager="pack">
+              <property name="fill">x</property>
+              <property name="padx">10</property>
+              <property name="pady">10</property>
+              <property name="side">top</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Button" id="aligment_image_button">
+            <property name="command" type="command" cbtype="simple">align_and_insert_image</property>
+            <property name="compound">top</property>
+            <property name="text" translatable="yes">Align Image</property>
+            <layout manager="pack">
+              <property name="fill">x</property>
+              <property name="padx">10</property>
+              <property name="pady">10</property>
+              <property name="side">top</property>
+            </layout>
           </object>
         </child>
       </object>

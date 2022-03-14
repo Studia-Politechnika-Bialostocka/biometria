@@ -7,6 +7,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
@@ -32,7 +34,8 @@ class BiometriaGuiApp:
         self.binarize_threshold_scale.set(120)
         self.__tkvar = tk.StringVar(value='Normal')
         __values = ['Red', 'Green', 'Blue', 'Normal']
-        self.binarize_options = tk.OptionMenu(self.frame1, self.__tkvar, 'Normal', *__values, command=self.set_binarize_option)
+        self.binarize_options = tk.OptionMenu(self.frame1, self.__tkvar, 'Normal', *__values,
+                                              command=self.set_binarize_option)
         self.set_binarize_option(self.__tkvar.get())
         self.binarize_options.pack(anchor='n', fill='x', side='top')
         self.binarize_image_button = tk.Button(self.frame1)
@@ -40,7 +43,7 @@ class BiometriaGuiApp:
         self.binarize_image_button.pack(fill='x', side='top')
         self.binarize_image_button.configure(command=self.binarize_and_insert_image)
         self.frame1.configure(height='117', width='200')
-        self.frame1.pack(padx='10', side='top')
+        self.frame1.pack(padx='10', pady='10', side='top')
         self.frame1.pack_propagate(0)
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
@@ -50,11 +53,15 @@ class BiometriaGuiApp:
         self.original_image_canvas = tk.Canvas(self.main_frame)
         self.original_image_canvas.configure(background='#0e5092', cursor='hand2', height='350', width='350')
         self.original_image_canvas.place(anchor='nw', relx='0.13', rely='0.03', x='0', y='0')
-        self.original_image_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.original_image_canvas, self.original_image))
+        self.original_image_canvas.bind('<Button-1>',
+                                        lambda _: self.open_image_in_new_window(self.original_image_canvas,
+                                                                                self.original_image))
         self.changed_image_1_canvas = tk.Canvas(self.main_frame)
         self.changed_image_1_canvas.configure(background='#F26419', cursor='hand2', height='350', width='350')
         self.changed_image_1_canvas.place(anchor='ne', relx='0.87', rely='0.03', x='0', y='0')
-        self.changed_image_1_canvas.bind('<Button-1>', lambda _: self.open_image_in_new_window(self.changed_image_1_canvas, self.changed_image_1))
+        self.changed_image_1_canvas.bind('<Button-1>',
+                                         lambda _: self.open_image_in_new_window(self.changed_image_1_canvas,
+                                                                                 self.changed_image_1))
         self.grey_original_image_canvas = tk.Canvas(self.main_frame)
         self.grey_original_image_canvas.configure(background='#65dc80', height='350', width='350')
         self.grey_original_image_canvas.place(anchor='sw', relx='0.13', rely='0.97', x='0', y='0')
@@ -68,16 +75,19 @@ class BiometriaGuiApp:
         self.histogram_2 = tk.Button(self.main_frame)
         self.histogram_2.configure(text='Histogram 2')
         self.histogram_2.place(anchor='se', relx='0.965', rely='0.25', x='0', y='0')
-        self.histogram_2.configure(command=lambda: self.generate_and_display_histogram(self.changed_image_1, 'changed_image_1'))
+        self.histogram_2.configure(
+            command=lambda: self.generate_and_display_histogram(self.changed_image_1, 'changed_image_1'))
         self.histogram_3 = tk.Button(self.main_frame)
         self.histogram_3.configure(text='Histogram 3')
         self.histogram_3.place(anchor='nw', relx='0.035', rely='0.75', x='0', y='0')
         self.histogram_3.configure(command=self.generate_and_display_histogram)
-        self.histogram_3.configure(command=lambda: self.generate_and_display_histogram(self.grey_original_image, 'grey_original_image'))
+        self.histogram_3.configure(
+            command=lambda: self.generate_and_display_histogram(self.grey_original_image, 'grey_original_image'))
         self.histogram_4 = tk.Button(self.main_frame)
         self.histogram_4.configure(text='Histogram 4')
         self.histogram_4.place(anchor='se', relx='0.965', rely='0.75', x='0', y='0')
-        self.histogram_4.configure(command=lambda: self.generate_and_display_histogram(self.grey_changed_image_1, 'grey_changed_image_1'))
+        self.histogram_4.configure(
+            command=lambda: self.generate_and_display_histogram(self.grey_changed_image_1, 'grey_changed_image_1'))
         self.main_frame.configure(background='#03256C', height='800', width='1166')
         self.main_frame.pack(side='top')
         self.main_frame.pack_propagate(0)
@@ -184,10 +194,7 @@ class BiometriaGuiApp:
         canvas.image = img
         canvas.configure(height=img.height(), width=img.width())
 
-    def generate_and_display_histogram(self, image, type_histogram='original'):
-        if not image:
-            self.message_popup('Image', 'You need to select an image first', 'info')
-            return
+    def generate_histogram(self, image):
         histogram = np.zeros(256)
         for x in range(image.width):
             for y in range(image.height):
@@ -195,6 +202,14 @@ class BiometriaGuiApp:
                 if type(pixel) == tuple:
                     pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
                 histogram[pixel] += 1
+        return histogram
+
+
+    def generate_and_display_histogram(self, image, type_histogram='original'):
+        if not image:
+            self.message_popup('Image', 'You need to select an image first', 'info')
+            return
+        histogram = self.generate_histogram(image)
         plt.figure()
         plt.bar(range(256), histogram)
         plt.title('Histogram of ' + type_histogram + ' image')
@@ -202,15 +217,9 @@ class BiometriaGuiApp:
         plt.ylabel('Number of pixels')
         plt.grid(True, which='major', axis='y')
         plt.ylim(0, max(histogram) + 100)
-
         plt.show()
 
 
 if __name__ == '__main__':
     app = BiometriaGuiApp()
     app.run()
-
-
-
-
-
