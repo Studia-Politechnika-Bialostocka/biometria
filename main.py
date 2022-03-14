@@ -45,6 +45,7 @@ class BiometriaGuiApp:
         self.frame1.configure(height='117', width='200')
         self.frame1.pack(padx='10', pady='10', side='top')
         self.frame1.pack_propagate(0)
+
         self.niblack_container = tk.Frame(self.menu_frame)
         self.niblack_window_size_label = ttk.Label(self.niblack_container)
         self.niblack_window_size_label.configure(text='Window size')
@@ -67,6 +68,30 @@ class BiometriaGuiApp:
         self.niblack_container.configure(height='101', width='200')
         self.niblack_container.pack(padx='10', pady='10', side='top')
         self.niblack_container.pack_propagate(0)
+
+        self.sauvola_container = tk.Frame(self.menu_frame)
+        self.sauvola_window_size_label = tk.Label(self.sauvola_container)
+        self.sauvola_window_size_label.configure(justify='left', text='Window size')
+        self.sauvola_window_size_label.pack(fill='x', side='top')
+        self.sauvola_window_size_input = ttk.Spinbox(self.sauvola_container)
+        self.sauvola_window_size_input.configure(from_='1', increment='2', to='100')
+        self.sauvola_window_size_input.pack(fill='x', padx='2', side='top')
+        self.sauvola_window_size_input.set(15)
+        self.sauvola_k_label = tk.Label(self.sauvola_container)
+        self.sauvola_k_label.configure(text='k')
+        self.sauvola_k_label.pack(side='top')
+        self.sauvola_k_input = ttk.Spinbox(self.sauvola_container)
+        self.sauvola_k_input.configure(from_='-100', increment='0.1', to='100')
+        self.sauvola_k_input.pack(fill='x', padx='2', side='top')
+        self.sauvola_k_input.set(0.2)
+        self.sauvola_algorithm_button = tk.Button(self.sauvola_container)
+        self.sauvola_algorithm_button.configure(text='Sauvola Algorithm')
+        self.sauvola_algorithm_button.pack(fill='x', side='top')
+        self.sauvola_algorithm_button.configure(command=self.sauvola_algorithm)
+        self.sauvola_container.configure(height='107', width='200')
+        self.sauvola_container.pack(padx='10', pady='10', side='top')
+        self.sauvola_container.pack_propagate(0)
+
 
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
@@ -125,6 +150,24 @@ class BiometriaGuiApp:
     def run(self):
         self.mainwindow.mainloop()
 
+    def sauvola(self, img, w, k):
+        img = img.astype(float)
+        img2 = np.square(img)
+
+        ave = cv2.blur(img, (w, w))
+        ave2 = cv2.blur(img2, (w, w))
+
+        n = np.multiply(*img.shape)
+        std = np.sqrt((ave2 * n - img2) / n / (n - 1))
+
+        # T = m(x,y) * (1 + k * ((s(x,y) / R) - 1))
+        t = ave * (1 + k * ((std / 255) - 1))
+
+        binary = np.zeros(img.shape)
+        binary[img >= t] = 255
+        return binary
+
+
     def niblack(self, img, w, k):
         img = img.astype(float)
         img2 = np.square(img)
@@ -135,10 +178,27 @@ class BiometriaGuiApp:
         n = np.multiply(*img.shape)
         std = np.sqrt((ave2 * n - img2) / n / (n - 1))
 
-        t = ave + k * std
+        # T = m(x, y) - k * s(x, y)
+        t = ave - k * std
+
         binary = np.zeros(img.shape)
         binary[img >= t] = 255
         return binary
+
+    def sauvola_algorithm(self):
+        if not self.original_image:
+            self.message_popup('No image selected', 'Please select an image first', 'info')
+            return
+        window_size = int(self.sauvola_window_size_input.get())
+        k = float(self.sauvola_k_input.get())
+        original = cv2.imread(self.original_image_path)
+        scaled = cv2.resize(original, None, fx=1, fy=1)
+        scaled = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
+        inverted = 255 - scaled
+        binary_inv = self.sauvola(inverted, window_size, k)
+        binary = 255 - binary_inv
+        cv2.imshow('Sauvola', binary)
+
 
     # Niblack local threshold to an array
     # A threshold T is calculated for every pixel in the image
