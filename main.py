@@ -61,7 +61,7 @@ class BiometriaGuiApp:
         self.algorithm_k_input.configure(from_='-100', increment='0.1', to='100')
         self.algorithm_k_input.pack(fill='x', padx='2', side='top')
         self.algorithm_k_input.set(0.2)
-        __values2 = ['Sauvola Algorithm', 'Phansalkar Algorithm']
+        __values2 = ['Sauvola Algorithm', 'Phansalkar Algorithm', 'Brensen Algorithm']
         self.__tkvar2 = tk.StringVar(value='Niblack Algorithm')
         self.algorithm_type = tk.OptionMenu(self.algorithms_container, self.__tkvar2, 'Niblack Algorithm', *__values2,
                                             command=self.set_algorithm_type)
@@ -153,6 +153,9 @@ class BiometriaGuiApp:
             p = 2
             q = 10
             t = ave * (1 + p * np.exp(-q * ave) + k * ((std / 255) - 1))
+        elif type_algorithm == 'Brensen Algorithm':
+            pass
+
 
         binary = np.zeros(img.shape)
         binary[img >= t] = 255
