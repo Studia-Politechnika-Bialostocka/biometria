@@ -7,7 +7,7 @@ import tkinter.ttk as ttk
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-
+import math
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
@@ -46,52 +46,34 @@ class BiometriaGuiApp:
         self.frame1.pack(padx='10', pady='10', side='top')
         self.frame1.pack_propagate(0)
 
-        self.niblack_container = tk.Frame(self.menu_frame)
-        self.niblack_window_size_label = ttk.Label(self.niblack_container)
-        self.niblack_window_size_label.configure(text='Window size')
-        self.niblack_window_size_label.pack(fill='x', side='top')
-        self.niblack_window_size_input = ttk.Spinbox(self.niblack_container)
-        self.niblack_window_size_input.configure(from_='1', increment='2', to='100')
-        self.niblack_window_size_input.pack(fill='x', side='top')
-        self.niblack_window_size_input.set(15)
-        self.niblack_k_label = ttk.Label(self.niblack_container)
-        self.niblack_k_label.configure(text='k')
-        self.niblack_k_label.pack(fill='x', side='top')
-        self.niblack_k_input = ttk.Spinbox(self.niblack_container)
-        self.niblack_k_input.configure(from_='-100', increment='0.1', to='100')
-        self.niblack_k_input.pack(fill='x', side='top')
-        self.niblack_k_input.set(0.2)
-        self.niblack_algorithm_button = tk.Button(self.niblack_container)
-        self.niblack_algorithm_button.configure(text='Niblack Algorithm')
-        self.niblack_algorithm_button.pack(fill='x', side='top')
-        self.niblack_algorithm_button.configure(command=self.niblack_algorithm)
-        self.niblack_container.configure(height='101', width='200')
-        self.niblack_container.pack(padx='10', pady='10', side='top')
-        self.niblack_container.pack_propagate(0)
-
-        self.sauvola_container = tk.Frame(self.menu_frame)
-        self.sauvola_window_size_label = tk.Label(self.sauvola_container)
-        self.sauvola_window_size_label.configure(justify='left', text='Window size')
-        self.sauvola_window_size_label.pack(fill='x', side='top')
-        self.sauvola_window_size_input = ttk.Spinbox(self.sauvola_container)
-        self.sauvola_window_size_input.configure(from_='1', increment='2', to='100')
-        self.sauvola_window_size_input.pack(fill='x', padx='2', side='top')
-        self.sauvola_window_size_input.set(15)
-        self.sauvola_k_label = tk.Label(self.sauvola_container)
-        self.sauvola_k_label.configure(text='k')
-        self.sauvola_k_label.pack(side='top')
-        self.sauvola_k_input = ttk.Spinbox(self.sauvola_container)
-        self.sauvola_k_input.configure(from_='-100', increment='0.1', to='100')
-        self.sauvola_k_input.pack(fill='x', padx='2', side='top')
-        self.sauvola_k_input.set(0.2)
-        self.sauvola_algorithm_button = tk.Button(self.sauvola_container)
-        self.sauvola_algorithm_button.configure(text='Sauvola Algorithm')
-        self.sauvola_algorithm_button.pack(fill='x', side='top')
-        self.sauvola_algorithm_button.configure(command=self.sauvola_algorithm)
-        self.sauvola_container.configure(height='107', width='200')
-        self.sauvola_container.pack(padx='10', pady='10', side='top')
-        self.sauvola_container.pack_propagate(0)
-
+        self.algorithms_container = tk.Frame(self.menu_frame)
+        self.algorithm_window_size_label = tk.Label(self.algorithms_container)
+        self.algorithm_window_size_label.configure(justify='left', text='Window size')
+        self.algorithm_window_size_label.pack(fill='x', side='top')
+        self.algorithm_window_size_input = ttk.Spinbox(self.algorithms_container)
+        self.algorithm_window_size_input.configure(from_='1', increment='2', to='100')
+        self.algorithm_window_size_input.pack(fill='x', padx='2', side='top')
+        self.algorithm_window_size_input.set(5)
+        self.algorithm_k_label = tk.Label(self.algorithms_container)
+        self.algorithm_k_label.configure(text='k')
+        self.algorithm_k_label.pack(side='top')
+        self.algorithm_k_input = ttk.Spinbox(self.algorithms_container)
+        self.algorithm_k_input.configure(from_='-100', increment='0.1', to='100')
+        self.algorithm_k_input.pack(fill='x', padx='2', side='top')
+        self.algorithm_k_input.set(0.2)
+        __values2 = ['Sauvola Algorithm', 'Phansalkar Algorithm']
+        self.__tkvar2 = tk.StringVar(value='Niblack Algorithm')
+        self.algorithm_type = tk.OptionMenu(self.algorithms_container, self.__tkvar2, 'Niblack Algorithm', *__values2,
+                                            command=self.set_algorithm_type)
+        self.algorithm_type.pack(fill='x', side='top')
+        self.set_algorithm_type(self.__tkvar2.get())
+        self.calculate_algorithm_button = tk.Button(self.algorithms_container)
+        self.calculate_algorithm_button.configure(text='Calculate')
+        self.calculate_algorithm_button.pack(fill='x', side='top')
+        self.calculate_algorithm_button.configure(command=self.calculate_algorithm_threshold)
+        self.algorithms_container.configure(height='138', width='200')
+        self.algorithms_container.pack(padx='10', pady='10', side='top')
+        self.algorithms_container.pack_propagate(0)
 
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
@@ -150,7 +132,8 @@ class BiometriaGuiApp:
     def run(self):
         self.mainwindow.mainloop()
 
-    def sauvola(self, img, w, k):
+    # https://imagej.net/plugins/auto-local-threshold
+    def algorithm_threshold(self, img, w, k, type_algorithm):
         img = img.astype(float)
         img2 = np.square(img)
 
@@ -160,63 +143,38 @@ class BiometriaGuiApp:
         n = np.multiply(*img.shape)
         std = np.sqrt((ave2 * n - img2) / n / (n - 1))
 
-        # T = m(x,y) * (1 + k * ((s(x,y) / R) - 1))
-        t = ave * (1 + k * ((std / 255) - 1))
+        if type_algorithm == 'Niblack Algorithm':
+            # T = m(x, y) - k * s(x, y)
+            t = ave - k * std
+        elif type_algorithm == 'Sauvola Algorithm':
+            # T = m(x,y) * (1 + k * ((s(x,y) / R) - 1))
+            t = ave * (1 + k * ((std / 255) - 1))
+        elif type_algorithm == 'Phansalkar Algorithm':
+            p = 2
+            q = 10
+            t = ave * (1 + p * np.exp(-q * ave) + k * ((std / 255) - 1))
 
         binary = np.zeros(img.shape)
         binary[img >= t] = 255
         return binary
 
-
-    def niblack(self, img, w, k):
-        img = img.astype(float)
-        img2 = np.square(img)
-
-        ave = cv2.blur(img, (w, w))
-        ave2 = cv2.blur(img2, (w, w))
-
-        n = np.multiply(*img.shape)
-        std = np.sqrt((ave2 * n - img2) / n / (n - 1))
-
-        # T = m(x, y) - k * s(x, y)
-        t = ave - k * std
-
-        binary = np.zeros(img.shape)
-        binary[img >= t] = 255
-        return binary
-
-    def sauvola_algorithm(self):
+    def calculate_algorithm_threshold(self):
         if not self.original_image:
             self.message_popup('No image selected', 'Please select an image first', 'info')
             return
-        window_size = int(self.sauvola_window_size_input.get())
-        k = float(self.sauvola_k_input.get())
+        window_size = int(self.algorithm_window_size_input.get())
+        k = float(self.algorithm_k_input.get())
+        type_algorithm = self.algorithm_type
         original = cv2.imread(self.original_image_path)
         scaled = cv2.resize(original, None, fx=1, fy=1)
         scaled = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
         inverted = 255 - scaled
-        binary_inv = self.sauvola(inverted, window_size, k)
+        binary_inv = self.algorithm_threshold(inverted, window_size, k, type_algorithm)
         binary = 255 - binary_inv
-        cv2.imshow('Sauvola', binary)
+        cv2.imshow(type_algorithm, binary)
 
-
-    # Niblack local threshold to an array
-    # A threshold T is calculated for every pixel in the image
-    def niblack_algorithm(self):
-        if not self.original_image:
-            self.message_popup('No image selected', 'Please select an image first', 'info')
-            return
-        window_size = int(self.niblack_window_size_input.get())
-        k = float(self.niblack_k_input.get())
-        original = cv2.imread(self.original_image_path)
-        scaled = cv2.resize(original, None, fx=1, fy=1)
-        scaled = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
-        inverted = 255 - scaled
-        binary_inv = self.niblack(inverted, window_size, k)
-        binary = 255 - binary_inv
-
-        cv2.imshow('Niblack', binary)
-        pass
+    def set_algorithm_type(self, algorithm_type):
+        self.algorithm_type = algorithm_type
 
     def gray_scale_image(self, image):
         image = image.convert('L')
@@ -281,7 +239,7 @@ class BiometriaGuiApp:
                 elif binarize_option == 'Green':
                     pixel = pixel[1]
                 elif binarize_option == 'Blue':
-                        pixel = pixel[2]
+                    pixel = pixel[2]
                 if pixel < threshold:
                     image.putpixel((x, y), (0, 0, 0))
                 else:
@@ -320,7 +278,6 @@ class BiometriaGuiApp:
                     pixel = int((pixel[0] + pixel[1] + pixel[2]) / 3)
                 histogram[pixel] += 1
         return histogram
-
 
     def generate_and_display_histogram(self, image, type_histogram='original'):
         if not image:
