@@ -2,12 +2,11 @@ from tkinter import *
 from PIL import ImageTk, Image
 from tkinter import filedialog
 import pathlib
-import pygubu
 import tkinter as tk
 import tkinter.ttk as ttk
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
+import matplotlib.pyplot as plt
 
 
 PROJECT_PATH = pathlib.Path(__file__).parent
@@ -17,6 +16,7 @@ PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 class BiometriaGuiApp:
     def __init__(self, master=None):
         # build ui
+        self.original_image_path = None
         self.grey_changed_image_1 = None
         self.grey_original_image = None
         self.changed_image_1 = None
@@ -45,6 +45,29 @@ class BiometriaGuiApp:
         self.frame1.configure(height='117', width='200')
         self.frame1.pack(padx='10', pady='10', side='top')
         self.frame1.pack_propagate(0)
+        self.niblack_container = tk.Frame(self.menu_frame)
+        self.niblack_window_size_label = ttk.Label(self.niblack_container)
+        self.niblack_window_size_label.configure(text='Window size')
+        self.niblack_window_size_label.pack(fill='x', side='top')
+        self.niblack_window_size_input = ttk.Spinbox(self.niblack_container)
+        self.niblack_window_size_input.configure(from_='1', increment='2', to='100')
+        self.niblack_window_size_input.pack(fill='x', side='top')
+        self.niblack_window_size_input.set(15)
+        self.niblack_k_label = ttk.Label(self.niblack_container)
+        self.niblack_k_label.configure(text='k')
+        self.niblack_k_label.pack(fill='x', side='top')
+        self.niblack_k_input = ttk.Spinbox(self.niblack_container)
+        self.niblack_k_input.configure(from_='-100', increment='0.1', to='100')
+        self.niblack_k_input.pack(fill='x', side='top')
+        self.niblack_k_input.set(0.2)
+        self.niblack_algorithm_button = tk.Button(self.niblack_container)
+        self.niblack_algorithm_button.configure(text='Niblack Algorithm')
+        self.niblack_algorithm_button.pack(fill='x', side='top')
+        self.niblack_algorithm_button.configure(command=self.niblack_algorithm)
+        self.niblack_container.configure(height='101', width='200')
+        self.niblack_container.pack(padx='10', pady='10', side='top')
+        self.niblack_container.pack_propagate(0)
+
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
         self.menu_frame.pack_propagate(0)
@@ -102,6 +125,39 @@ class BiometriaGuiApp:
     def run(self):
         self.mainwindow.mainloop()
 
+    def niblack(self, img, w, k):
+        img = img.astype(float)
+        img2 = np.square(img)
+
+        ave = cv2.blur(img, (w, w))
+        ave2 = cv2.blur(img2, (w, w))
+
+        n = np.multiply(*img.shape)
+        std = np.sqrt((ave2 * n - img2) / n / (n - 1))
+
+        t = ave + k * std
+        binary = np.zeros(img.shape)
+        binary[img >= t] = 255
+        return binary
+
+    # Niblack local threshold to an array
+    # A threshold T is calculated for every pixel in the image
+    def niblack_algorithm(self):
+        if not self.original_image:
+            self.message_popup('No image selected', 'Please select an image first', 'info')
+            return
+        window_size = int(self.niblack_window_size_input.get())
+        k = float(self.niblack_k_input.get())
+        original = cv2.imread(self.original_image_path)
+        scaled = cv2.resize(original, None, fx=1, fy=1)
+        scaled = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
+        inverted = 255 - scaled
+        binary_inv = self.niblack(inverted, window_size, k)
+        binary = 255 - binary_inv
+
+        cv2.imshow('Niblack', binary)
+        pass
+
     def gray_scale_image(self, image):
         image = image.convert('L')
         return image
@@ -113,6 +169,7 @@ class BiometriaGuiApp:
             return
         img = Image.open(filename)
         self.original_image = img
+        self.original_image_path = filename
         self.insert_image(img, self.original_image_canvas)
         grey_image = self.gray_scale_image(img)
         self.grey_original_image = grey_image.copy()
