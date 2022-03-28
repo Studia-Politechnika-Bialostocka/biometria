@@ -12,6 +12,8 @@ import math
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 
+from filters import pixelate_image
+
 
 class BiometriaGuiApp:
     def __init__(self, master=None):
@@ -74,6 +76,27 @@ class BiometriaGuiApp:
         self.algorithms_container.configure(height='138', width='200')
         self.algorithms_container.pack(padx='10', pady='10', side='top')
         self.algorithms_container.pack_propagate(0)
+
+        self.filters_frame = tk.Frame(self.menu_frame)
+        self.label1 = tk.Label(self.filters_frame)
+        self.label1.configure(justify='left', text='Pixel size')
+        self.label1.pack(fill='x', side='top')
+        self.filters_pixel_size_input = tk.Spinbox(self.filters_frame)
+        self.filters_pixel_size_input.configure(from_='1', increment='2', to='100')
+        self.filters_pixel_size_input.pack(fill='x', padx='2', side='top')
+        __values = ['Median Filter', 'Pixelization', 'Kuwagara Filter', 'Predator Filter']
+        self.__tkvar = tk.StringVar(value='Linear Filter')
+        self.filter_type = tk.OptionMenu(self.filters_frame, self.__tkvar, 'Linear Filter', *__values,
+                                         command=self.set_filter_type)
+        self.filter_type.pack(fill='x', side='top')
+        self.set_filter_type(self.__tkvar.get())
+        self.calculate_filter_button = tk.Button(self.filters_frame)
+        self.calculate_filter_button.configure(text='Calculate')
+        self.calculate_filter_button.pack(fill='x', side='top')
+        self.calculate_filter_button.configure(command=self.calculate_filter)
+        self.filters_frame.configure(height='98', width='200')
+        self.filters_frame.pack(padx='10', pady='10', side='top')
+        self.filters_frame.pack_propagate(0)
 
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
@@ -295,6 +318,20 @@ class BiometriaGuiApp:
         plt.grid(True, which='major', axis='y')
         plt.ylim(0, max(histogram) + 100)
         plt.show()
+
+    def set_filter_type(self, filter_type):
+        print(filter_type)
+        self.filter_type = filter_type
+
+    def calculate_filter(self):
+        if not self.original_image:
+            self.message_popup('No image selected', 'Please select an image first', 'info')
+            return
+        pixel_size = self.filters_pixel_size_input.get()
+        filter_type = self.filter_type
+        pixelate_image_result = pixelate_image(self.original_image_path, pixel_size, filter_type)
+        original = cv2.imread(pixelate_image_result)
+        cv2.imshow(filter_type, original)
 
 
 if __name__ == '__main__':
