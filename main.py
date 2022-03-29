@@ -12,7 +12,7 @@ import math
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 
-from filters import pixelate_image
+from filters import filter_image
 
 
 class BiometriaGuiApp:
@@ -79,13 +79,13 @@ class BiometriaGuiApp:
 
         self.filters_frame = tk.Frame(self.menu_frame)
         self.label1 = tk.Label(self.filters_frame)
-        self.label1.configure(justify='left', text='Pixel size')
+        self.label1.configure(justify='left', text='Mask size')
         self.label1.pack(fill='x', side='top')
         self.filters_pixel_size_input = tk.Spinbox(self.filters_frame)
         self.filters_pixel_size_input.configure(from_='1', increment='2', to='100')
         self.filters_pixel_size_input.pack(fill='x', padx='2', side='top')
-        __values = ['Median Filter', 'Pixelization', 'Kuwagara Filter', 'Predator Filter']
-        self.__tkvar = tk.StringVar(value='Linear Filter')
+        __values = ['Median Filter', 'Pixelization', 'Kuwahara Filter']
+        self.__tkvar = tk.StringVar(value='Median Filter')
         self.filter_type = tk.OptionMenu(self.filters_frame, self.__tkvar, 'Linear Filter', *__values,
                                          command=self.set_filter_type)
         self.filter_type.pack(fill='x', side='top')
@@ -329,8 +329,8 @@ class BiometriaGuiApp:
             return
         pixel_size = self.filters_pixel_size_input.get()
         filter_type = self.filter_type
-        pixelate_image_result = pixelate_image(self.original_image_path, pixel_size, filter_type)
-        original = cv2.imread(pixelate_image_result)
+        pixelate_image_result = filter_image(self.original_image_path, pixel_size, filter_type)
+        original = pixelate_image_result
         cv2.imshow(filter_type, original)
 
 
