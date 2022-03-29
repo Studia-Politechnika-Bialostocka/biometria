@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+import matplotlib.pyplot as plt
 
 
 def filter_image(image_path, pixel_size, filter_type):
@@ -14,7 +15,7 @@ def filter_image(image_path, pixel_size, filter_type):
     elif filter_type == 'Gaussian Filter':
         return gaussian_filter(image_path, pixel_size)
     elif filter_type == 'Sobel Filter':
-        return sobel_filter(image_path, pixel_size)
+        sobel_filter(image_path, pixel_size)
 
 
 def dnorm(x, mu, sd):
@@ -70,7 +71,26 @@ def convolution(image, kernel):
 
 
 def sobel_filter(image_path, pixel_size):
+    filter = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+    image = cv2.imread(image_path)
+    image = gaussian_filter(image_path, 9)
+    return sobel_edge_detection(image, filter)
+
     pass
+
+
+def sobel_edge_detection(image, filter):
+    new_image_x = convolution(image, filter)
+    new_image_y = convolution(image, np.flip(filter.T, axis=0))
+    gradient_magnitude = np.sqrt(np.square(new_image_x) + np.square(new_image_y))
+    gradient_magnitude *= 255.0 / gradient_magnitude.max()
+
+    plt.imshow(gradient_magnitude, cmap='gray')
+    plt.title("Gradient Magnitude")
+    plt.show()
+
+    return new_image_x
+
 
 
 def kuwahara_filter(image_path, pixel_size):

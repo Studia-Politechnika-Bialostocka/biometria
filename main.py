@@ -320,7 +320,6 @@ class BiometriaGuiApp:
         plt.show()
 
     def set_filter_type(self, filter_type):
-        print(filter_type)
         self.filter_type = filter_type
 
     def calculate_filter(self):
@@ -330,8 +329,10 @@ class BiometriaGuiApp:
         pixel_size = self.filters_pixel_size_input.get()
         filter_type = self.filter_type
         pixelate_image_result = filter_image(self.original_image_path, pixel_size, filter_type)
-        pixelate_image_result = pixelate_image_result.astype(np.uint8)
-        cv2.imshow(filter_type, pixelate_image_result)
+        if not filter_type == 'Sobel Filter':
+            if filter_type == 'Gaussian Filter':
+                pixelate_image_result = pixelate_image_result.astype(np.uint8)
+            cv2.imshow(filter_type, pixelate_image_result)
 
 
 if __name__ == '__main__':
