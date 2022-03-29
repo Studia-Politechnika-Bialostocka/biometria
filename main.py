@@ -330,6 +330,7 @@ class BiometriaGuiApp:
         pixel_size = self.filters_pixel_size_input.get()
         filter_type = self.filter_type
         pixelate_image_result = filter_image(self.original_image_path, pixel_size, filter_type)
+        pixelate_image_result = pixelate_image_result.astype(np.uint8)
         cv2.imshow(filter_type, pixelate_image_result)
 
 
