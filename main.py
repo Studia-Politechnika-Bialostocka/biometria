@@ -84,7 +84,7 @@ class BiometriaGuiApp:
         self.filters_pixel_size_input = tk.Spinbox(self.filters_frame)
         self.filters_pixel_size_input.configure(from_='1', increment='2', to='100')
         self.filters_pixel_size_input.pack(fill='x', padx='2', side='top')
-        __values = ['Median Filter', 'Pixelization', 'Kuwahara Filter']
+        __values = ['Median Filter', 'Pixelization', 'Kuwahara Filter', 'Gaussian Filter', 'Sobel Filter' ]
         self.__tkvar = tk.StringVar(value='Median Filter')
         self.filter_type = tk.OptionMenu(self.filters_frame, self.__tkvar, 'Linear Filter', *__values,
                                          command=self.set_filter_type)
@@ -330,8 +330,7 @@ class BiometriaGuiApp:
         pixel_size = self.filters_pixel_size_input.get()
         filter_type = self.filter_type
         pixelate_image_result = filter_image(self.original_image_path, pixel_size, filter_type)
-        original = pixelate_image_result
-        cv2.imshow(filter_type, original)
+        cv2.imshow(filter_type, pixelate_image_result)
 
 
 if __name__ == '__main__':
