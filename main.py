@@ -238,18 +238,17 @@ class BiometriaGuiApp:
         return image
 
     def select_and_insert_image(self):
-        self.run_segmentation()
-        # filename = filedialog.askopenfilename(title='Select an image')
-        # if not filename:
-        #     self.message_popup('No image selected', 'No image selected', 'warning')
-        #     return
-        # img = Image.open(filename)
-        # self.original_image = img
-        # self.original_image_path = filename
-        # self.insert_image(img, self.original_image_canvas)
-        # grey_image = self.gray_scale_image(img)
-        # self.grey_original_image = grey_image.copy()
-        # self.insert_image(grey_image, self.grey_original_image_canvas)
+        filename = filedialog.askopenfilename(title='Select an image')
+        if not filename:
+            self.message_popup('No image selected', 'No image selected', 'warning')
+            return
+        img = Image.open(filename)
+        self.original_image = img
+        self.original_image_path = filename
+        self.insert_image(img, self.original_image_canvas)
+        grey_image = self.gray_scale_image(img)
+        self.grey_original_image = grey_image.copy()
+        self.insert_image(grey_image, self.grey_original_image_canvas)
 
     def change_image_size(self, img, width=350, height=350):
         return img.resize((width, height), Image.ANTIALIAS)
