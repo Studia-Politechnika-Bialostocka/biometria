@@ -9,6 +9,8 @@ import cv2
 import matplotlib.pyplot as plt
 import math
 
+from segmentation import segmentation
+
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "biometria_gui.ui"
 
@@ -97,6 +99,35 @@ class BiometriaGuiApp:
         self.filters_frame.configure(height='98', width='200')
         self.filters_frame.pack(padx='10', pady='10', side='top')
         self.filters_frame.pack_propagate(0)
+
+        self.segmentation_frame = tk.Frame(self.menu_frame)
+        self.R_color_scale = tk.Scale(self.segmentation_frame)
+        self.R_color_scale.configure(from_='0', label='R', orient='horizontal', to='255')
+        self.R_color_scale.pack(fill='x', side='top')
+        self.G_color_scale = tk.Scale(self.segmentation_frame)
+        self.G_color_scale.configure(from_='0', label='G', orient='horizontal', to='255')
+        self.G_color_scale.pack(fill='x', side='top')
+        self.B_color_scale = tk.Scale(self.segmentation_frame)
+        self.B_color_scale.configure(from_='0', label='B', orient='horizontal', to='255')
+        self.B_color_scale.pack(fill='x', side='top')
+        self.label5 = tk.Label(self.segmentation_frame)
+        self.label5.configure(text='Pixel count')
+        self.label5.pack(side='top')
+        self.segmentation_pixel_count_input = tk.Spinbox(self.segmentation_frame)
+        self.segmentation_pixel_count_input.configure(from_='0', increment='1', to='100')
+        self.segmentation_pixel_count_input.pack(fill='x', padx='2', side='top')
+        self.segmentation_global_mode_val = tk.IntVar()
+        self.segmentation_global_mode = tk.Checkbutton(self.segmentation_frame, variable=self.segmentation_global_mode_val)
+        self.segmentation_global_mode.configure(text='Global mode')
+        self.segmentation_global_mode.pack(fill='both', side='left')
+        self.segmentation_fill_mode_val = tk.IntVar()
+        self.segmentation_fill_mode = tk.Checkbutton(self.segmentation_frame, variable=self.segmentation_fill_mode_val)
+        self.segmentation_fill_mode.configure(text='Fill mode')
+        self.segmentation_fill_mode.pack(fill='both', side='left')
+        self.segmentation_frame.configure(height='250', width='200')
+        self.segmentation_frame.pack(padx='10', pady='10', side='top')
+        self.segmentation_frame.pack_propagate(0)
+
 
         self.menu_frame.configure(background='#F6AE2D', height='800', width='200')
         self.menu_frame.pack(side='left')
@@ -207,17 +238,18 @@ class BiometriaGuiApp:
         return image
 
     def select_and_insert_image(self):
-        filename = filedialog.askopenfilename(title='Select an image')
-        if not filename:
-            self.message_popup('No image selected', 'No image selected', 'warning')
-            return
-        img = Image.open(filename)
-        self.original_image = img
-        self.original_image_path = filename
-        self.insert_image(img, self.original_image_canvas)
-        grey_image = self.gray_scale_image(img)
-        self.grey_original_image = grey_image.copy()
-        self.insert_image(grey_image, self.grey_original_image_canvas)
+        self.run_segmentation()
+        # filename = filedialog.askopenfilename(title='Select an image')
+        # if not filename:
+        #     self.message_popup('No image selected', 'No image selected', 'warning')
+        #     return
+        # img = Image.open(filename)
+        # self.original_image = img
+        # self.original_image_path = filename
+        # self.insert_image(img, self.original_image_canvas)
+        # grey_image = self.gray_scale_image(img)
+        # self.grey_original_image = grey_image.copy()
+        # self.insert_image(grey_image, self.grey_original_image_canvas)
 
     def change_image_size(self, img, width=350, height=350):
         return img.resize((width, height), Image.ANTIALIAS)
@@ -333,6 +365,16 @@ class BiometriaGuiApp:
             if filter_type == 'Gaussian Filter':
                 pixelate_image_result = pixelate_image_result.astype(np.uint8)
             cv2.imshow(filter_type, pixelate_image_result)
+
+    def run_segmentation(self):
+        R_value = self.R_color_scale.get()
+        G_value = self.G_color_scale.get()
+        B_value = self.B_color_scale.get()
+        pixel_count = self.segmentation_pixel_count_input.get()
+        global_mode = self.segmentation_global_mode_val.get()
+        fill_mode = self.segmentation_fill_mode_val.get()
+        print(R_value, G_value, B_value, pixel_count, global_mode, fill_mode)
+        # segmentation()
 
 
 if __name__ == '__main__':
