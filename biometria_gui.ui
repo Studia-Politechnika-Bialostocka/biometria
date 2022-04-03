@@ -156,6 +156,94 @@
             </child>
           </object>
         </child>
+        <child>
+          <object class="tk.Frame" id="segmentation_frame">
+            <property name="height">250</property>
+            <property name="width">200</property>
+            <layout manager="pack">
+              <property name="padx">10</property>
+              <property name="pady">10</property>
+              <property name="side">top</property>
+            </layout>
+            <containerlayout manager="pack">
+              <property name="propagate">False</property>
+            </containerlayout>
+            <child>
+              <object class="tk.Scale" id="R_color_scale">
+                <property name="from_">0</property>
+                <property name="label" translatable="yes">R</property>
+                <property name="orient">horizontal</property>
+                <property name="to">255</property>
+                <layout manager="pack">
+                  <property name="fill">x</property>
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Scale" id="G_color_scale">
+                <property name="from_">0</property>
+                <property name="label" translatable="yes">G</property>
+                <property name="orient">horizontal</property>
+                <property name="to">255</property>
+                <layout manager="pack">
+                  <property name="fill">x</property>
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Scale" id="B_color_scale">
+                <property name="from_">0</property>
+                <property name="label" translatable="yes">B</property>
+                <property name="orient">horizontal</property>
+                <property name="to">255</property>
+                <layout manager="pack">
+                  <property name="fill">x</property>
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Label" id="label5">
+                <property name="text" translatable="yes">Pixel count</property>
+                <layout manager="pack">
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Spinbox" id="segmentation_pixel_count_input">
+                <property name="from_">0</property>
+                <property name="increment">1</property>
+                <property name="to">100</property>
+                <layout manager="pack">
+                  <property name="fill">x</property>
+                  <property name="padx">2</property>
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="segmentation_global_mode">
+                <property name="text" translatable="yes">Global mode</property>
+                <layout manager="pack">
+                  <property name="fill">both</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="tk.Checkbutton" id="segmentation_fill_mode">
+                <property name="text" translatable="yes">Fill mode</property>
+                <layout manager="pack">
+                  <property name="fill">both</property>
+                  <property name="side">left</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
     <child>
